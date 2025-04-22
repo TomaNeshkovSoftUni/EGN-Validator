@@ -45,7 +45,6 @@ namespace ConsoleApp1
 
         private int[] coefficients = { 2, 4, 8, 5, 10, 9, 7, 3, 6 };
 
-
         public string[] Generate(DateTime birthDate, string city, bool isMale)
         {
             int year = birthDate.Year % 100;
@@ -61,16 +60,14 @@ namespace ConsoleApp1
                 month += 40;
             }
 
-            var (start, end) = regionalCodes[city];
-
             if (!regionalCodes.ContainsKey(city))
             {
                 throw new ArgumentException("Nevaliden grad.");
             }
 
+            var (start, end) = regionalCodes[city];
 
             List<int> validNumbers = new List<int>();
-
             for (int i = start; i <= end; i++)
             {
                 if ((isMale && i % 2 == 0) || (!isMale && i % 2 != 0))
@@ -79,34 +76,30 @@ namespace ConsoleApp1
                 }
             }
 
-            if (validNumbers.Count == 0)
+            List<string> allEGNs = new List<string>();
+
+            for (int i = 0; i < validNumbers.Count; i++)
             {
-                throw new Exception("Nqma nomera za tozi grad/pol.");
+                int regionalNumber = validNumbers[i];
+
+                string egnBase = $"{year:D2}{month:D2}{day:D2}{regionalNumber:D3}";
+
+                int sum = 0;
+                for (int j = 0; j < 9; j++)
+                {
+                    sum += (egnBase[j] - '0') * coefficients[j];
+                }
+
+                int controlDigit = sum % 11;
+                if (controlDigit == 10)
+                    controlDigit = 0;
+
+                string finalEgn = egnBase + controlDigit.ToString();
+                allEGNs.Add(finalEgn);
             }
 
-            int regionalNumber = validNumbers[new Random().Next(validNumbers.Count)];
-
-
-            int randomDigits = new Random().Next(100, 1000);
-
-            string egnBase = $"{year:D2}{month:D2}{day:D2}{regionalNumber:D3}";
-
-            int sum = 0;
-
-               for (int i = 0; i < 9; i++)
-            {
-                sum += int.Parse(egnBase[i].ToString()) * coefficients[i];
-            }
-
-            int controlDigit = sum % 11;
-            if (controlDigit == 10)
-                controlDigit = 0;
-
-            string finalEgn = egnBase + controlDigit.ToString();
-
-            return new string[] { finalEgn };
-        }
-            
+            return allEGNs.ToArray();
+        }            
         public bool Validate(string egn)
         {
             if (egn.Length != 10 || !egn.All(char.IsDigit))
