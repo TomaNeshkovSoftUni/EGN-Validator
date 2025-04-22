@@ -10,7 +10,42 @@ namespace ConsoleApp1
 {
     public class EGNValidator : IEGNValidator
     {
+        private Dictionary<string, (int start, int end)> regionalCodes = new Dictionary<string, (int, int)>()
+        {
+        { "Blagoevgrad", (0, 43) },
+        { "Burgas", (44, 93) },
+        { "Varna", (94, 139) },
+        { "Veliko Tarnovo", (140, 169) },
+        { "Vidin", (170, 183) },
+        { "Vratsa", (184, 217) },
+        { "Gabrovo", (218, 233) },
+        { "Kardzhali", (234, 281) },
+        { "Kyustendil", (282, 301) },
+        { "Lovech", (302, 319) },
+        { "Montana", (320, 341) },
+        { "Pazardzhik", (342, 377) },
+        { "Pernik", (378, 395) },
+        { "Pleven", (396, 435) },
+        { "Plovdiv", (436, 501) },
+        { "Razgrad", (502, 527) },
+        { "Ruse", (528, 555) },
+        { "Silistra", (556, 575) },
+        { "Sliven", (576, 601) },
+        { "Smolyan", (602, 623) },
+        { "Sofia - grad", (624, 721) },
+        { "Sofia - oblast", (722, 751) },
+        { "Stara Zagora", (752, 789) },
+        { "Dobrich", (790, 821) },
+        { "Targovishte", (822, 843) },
+        { "Haskovo", (844, 871) },
+        { "Shumen", (872, 903) },
+        { "Yambol", (904, 925) },
+        { "Друг", (926, 999) }
+        };
+
         private int[] coefficients = { 2, 4, 8, 5, 10, 9, 7, 3, 6 };
+
+
         public string[] Generate(DateTime birthDate, string city, bool isMale)
         {
             int year = birthDate.Year % 100;
@@ -26,19 +61,35 @@ namespace ConsoleApp1
                 month += 40;
             }
 
-            int genderNumber;
-            if (isMale)
+            var (start, end) = regionalCodes[city];
+
+            if (!regionalCodes.ContainsKey(city))
             {
-                genderNumber = new Random().Next(0, 500);
+                throw new ArgumentException("Nevaliden grad.");
             }
-            else
+
+
+            List<int> validNumbers = new List<int>();
+
+            for (int i = start; i <= end; i++)
             {
-                genderNumber = new Random().Next(500, 1000);
+                if ((isMale && i % 2 == 0) || (!isMale && i % 2 != 0))
+                {
+                    validNumbers.Add(i);
+                }
             }
+
+            if (validNumbers.Count == 0)
+            {
+                throw new Exception("Nqma nomera za tozi grad/pol.");
+            }
+
+            int regionalNumber = validNumbers[new Random().Next(validNumbers.Count)];
+
 
             int randomDigits = new Random().Next(100, 1000);
 
-            string egnBase = $"{year:D2}{month:D2}{day:D2}{randomDigits:D3}";
+            string egnBase = $"{year:D2}{month:D2}{day:D2}{regionalNumber:D3}";
 
             int sum = 0;
 
